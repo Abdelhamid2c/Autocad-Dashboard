@@ -1,0 +1,381 @@
+{
+ "meta": {
+  "source": {
+   "file": "CAD Organization Chart.pptx",
+   "slides": 1
+  },
+  "schemaVersion": 1,
+  "extractedOn": "2026-10-18",
+  "capacity": {
+   "dailyHours": 8,
+   "weeklyHours": 40,
+   "workingDays": [
+    "MON",
+    "TUE",
+    "WED",
+    "THU",
+    "FRI"
+   ],
+   "note": "Configurable. 8 h/day x 5 days = 40 h/week per technician."
+  },
+  "namingNote": "The source gives positions and headcounts only — no employee names. 'name' is null and must be entered in the app. Never invent names.",
+  "legend": {
+   "PPC_DIRECTOR": "PPC Director",
+   "MANAGER": "Manager",
+   "CAD_RESPONSIBLE": "CAD Responsible",
+   "CAD_TECHNICIAN": "CAD Technician"
+  },
+  "headcountSummary": {
+   "cadTechniciansConfirmed": 13,
+   "cadResponsiblesConfirmed": 4,
+   "managersTBC": [
+    "MGR-YMM2"
+   ],
+   "plantsWithTBCHeadcount": [
+    "SATELLITES"
+   ]
+  },
+  "plannerNote": "The chart has no 'CAD Coordinator' box. The app's main user is the central CAD Coordinator/planner (reports to the PPC Director); CAD Responsibles are modelled as plant leads. Confirm this reading."
+ },
+ "director": {
+  "id": "PPC-DIRECTOR",
+  "role": "PPC_DIRECTOR",
+  "name": null,
+  "origin": "source"
+ },
+ "sites": [
+  {
+   "id": "MEKNES",
+   "name": "Meknes",
+   "plantIds": [
+    "YMM1",
+    "YMM2"
+   ]
+  },
+  {
+   "id": "KENITRA",
+   "name": "Kenitra",
+   "plantIds": [
+    "YMOK",
+    "YMK"
+   ]
+  },
+  {
+   "id": "TANGER",
+   "name": "Tanger",
+   "plantIds": [
+    "YMOT",
+    "SATELLITES"
+   ]
+  }
+ ],
+ "plants": [
+  {
+   "id": "YMM1",
+   "name": "YMM1",
+   "sourceLabel": "YMM1",
+   "siteId": "MEKNES"
+  },
+  {
+   "id": "YMM2",
+   "name": "YMM2",
+   "sourceLabel": "YMM2",
+   "siteId": "MEKNES"
+  },
+  {
+   "id": "YMOK",
+   "name": "YMOK",
+   "sourceLabel": "YMOK",
+   "siteId": "KENITRA"
+  },
+  {
+   "id": "YMK",
+   "name": "YMK",
+   "sourceLabel": "YMK",
+   "siteId": "KENITRA"
+  },
+  {
+   "id": "YMOT",
+   "name": "YMOT",
+   "sourceLabel": "YMOT",
+   "siteId": "TANGER"
+  },
+  {
+   "id": "SATELLITES",
+   "name": "SATELLITES",
+   "sourceLabel": "SATELLITES T",
+   "siteId": "TANGER"
+  }
+ ],
+ "people": [
+  {
+   "id": "MGR-YMM1",
+   "role": "MANAGER",
+   "plantId": "YMM1",
+   "name": null,
+   "reportsTo": "PPC-DIRECTOR",
+   "positionStatus": "Position shown",
+   "origin": "source"
+  },
+  {
+   "id": "RESP-YMM1-01",
+   "role": "CAD_RESPONSIBLE",
+   "plantId": "YMM1",
+   "name": null,
+   "reportsTo": "MGR-YMM1",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMM1-01",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMM1",
+   "name": null,
+   "label": "CAD Technician 1 – YMM1",
+   "reportsTo": "RESP-YMM1-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMM1-02",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMM1",
+   "name": null,
+   "label": "CAD Technician 2 – YMM1",
+   "reportsTo": "RESP-YMM1-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "MGR-YMM2",
+   "role": "MANAGER",
+   "plantId": "YMM2",
+   "name": null,
+   "reportsTo": "PPC-DIRECTOR",
+   "positionStatus": "TBC",
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMM2-01",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMM2",
+   "name": null,
+   "label": "CAD Technician 1 – YMM2",
+   "reportsTo": "RESP-YMM1-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source",
+   "note": "YMM2 shows no CAD Responsible box; a connector links these technicians to the YMM1 CAD Responsible (reading of the chart — to be confirmed)."
+  },
+  {
+   "id": "TECH-YMM2-02",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMM2",
+   "name": null,
+   "label": "CAD Technician 2 – YMM2",
+   "reportsTo": "RESP-YMM1-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source",
+   "note": "YMM2 shows no CAD Responsible box; a connector links these technicians to the YMM1 CAD Responsible (reading of the chart — to be confirmed)."
+  },
+  {
+   "id": "TECH-YMM2-03",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMM2",
+   "name": null,
+   "label": "CAD Technician 3 – YMM2",
+   "reportsTo": "RESP-YMM1-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source",
+   "note": "YMM2 shows no CAD Responsible box; a connector links these technicians to the YMM1 CAD Responsible (reading of the chart — to be confirmed)."
+  },
+  {
+   "id": "MGR-YMOK",
+   "role": "MANAGER",
+   "plantId": "YMOK",
+   "name": null,
+   "reportsTo": "PPC-DIRECTOR",
+   "positionStatus": "Position shown",
+   "origin": "source"
+  },
+  {
+   "id": "RESP-YMOK-01",
+   "role": "CAD_RESPONSIBLE",
+   "plantId": "YMOK",
+   "name": null,
+   "reportsTo": "MGR-YMOK",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMOK-01",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMOK",
+   "name": null,
+   "label": "CAD Technician 1 – YMOK",
+   "reportsTo": "RESP-YMOK-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMOK-02",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMOK",
+   "name": null,
+   "label": "CAD Technician 2 – YMOK",
+   "reportsTo": "RESP-YMOK-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMOK-03",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMOK",
+   "name": null,
+   "label": "CAD Technician 3 – YMOK",
+   "reportsTo": "RESP-YMOK-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "MGR-YMK",
+   "role": "MANAGER",
+   "plantId": "YMK",
+   "name": null,
+   "reportsTo": "PPC-DIRECTOR",
+   "positionStatus": "Position shown",
+   "origin": "source"
+  },
+  {
+   "id": "RESP-YMK-01",
+   "role": "CAD_RESPONSIBLE",
+   "plantId": "YMK",
+   "name": null,
+   "reportsTo": "MGR-YMK",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMK-01",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMK",
+   "name": null,
+   "label": "CAD Technician 1 – YMK",
+   "reportsTo": "RESP-YMK-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMK-02",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMK",
+   "name": null,
+   "label": "CAD Technician 2 – YMK",
+   "reportsTo": "RESP-YMK-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "MGR-YMOT",
+   "role": "MANAGER",
+   "plantId": "YMOT",
+   "name": null,
+   "reportsTo": "PPC-DIRECTOR",
+   "positionStatus": "Position shown",
+   "origin": "source"
+  },
+  {
+   "id": "RESP-YMOT-01",
+   "role": "CAD_RESPONSIBLE",
+   "plantId": "YMOT",
+   "name": null,
+   "reportsTo": "MGR-YMOT",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMOT-01",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMOT",
+   "name": null,
+   "label": "CAD Technician 1 – YMOT",
+   "reportsTo": "RESP-YMOT-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMOT-02",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMOT",
+   "name": null,
+   "label": "CAD Technician 2 – YMOT",
+   "reportsTo": "RESP-YMOT-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "TECH-YMOT-03",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "YMOT",
+   "name": null,
+   "label": "CAD Technician 3 – YMOT",
+   "reportsTo": "RESP-YMOT-01",
+   "positionStatus": "Confirmed position (headcount from org chart)",
+   "weeklyCapacityHours": 40,
+   "skills": [],
+   "origin": "source"
+  },
+  {
+   "id": "MGR-SATELLITES",
+   "role": "MANAGER",
+   "plantId": "SATELLITES",
+   "name": null,
+   "reportsTo": "PPC-DIRECTOR",
+   "positionStatus": "Position shown",
+   "origin": "source"
+  },
+  {
+   "id": "RESP-SATELLITES-TBC",
+   "role": "CAD_RESPONSIBLE",
+   "plantId": "SATELLITES",
+   "name": null,
+   "reportsTo": "MGR-SATELLITES",
+   "positionStatus": "TBC",
+   "origin": "source"
+  },
+  {
+   "id": "TECH-SATELLITES-TBC",
+   "role": "CAD_TECHNICIAN",
+   "plantId": "SATELLITES",
+   "name": null,
+   "reportsTo": "RESP-SATELLITES-TBC",
+   "positionStatus": "TBC",
+   "weeklyCapacityHours": null,
+   "origin": "source",
+   "note": "Headcount TBC in the source; add technicians in the app once confirmed. Excluded from capacity totals while TBC."
+  }
+ ]
+}

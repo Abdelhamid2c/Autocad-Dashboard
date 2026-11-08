@@ -4,7 +4,7 @@ import { A } from '../state/actions.js';
 import { useStore } from '../state/store.jsx';
 import { formatEop, parseEop } from '../utils/eop.js';
 import { uid } from '../utils/ids.js';
-import { milestoneColors } from '../utils/milestoneStyle.js';
+import { CATEGORIES, milestoneColors } from '../utils/milestoneStyle.js';
 import { milestoneWarnings, overlappingIds } from '../utils/planValidation.js';
 import { MONTH_NAMES } from '../utils/weekCalendar.js';
 import { lineMatchesPlant } from '../utils/workloadAggregation.js';
@@ -140,7 +140,7 @@ export default function MilestoneGrid({ filters, zoom }) {
         <div className="pl-inner">
           {/* header: year + periods, months, weeks */}
           <div className="pl-row pl-head-row" style={{ top: 0, minHeight: 22 }}>
-            <div className="pl-left"><div style={{ width: 420, fontWeight: 700 }}>{plan.meta.source?.year} · PPC CAD Milestone</div></div>
+            <div className="pl-left"><div style={{ width: 490, fontWeight: 700 }}>{plan.meta.source?.year} · PPC CAD Milestone</div></div>
             <div className="pl-time pl-hline">
               {plan.meta.periods.map((p) => (
                 <span key={p.id} className="pl-cell-h" style={{ width: (p.endWeek - p.startWeek + 1) * cw, fontWeight: 700, justifyContent: 'flex-start', paddingLeft: 8 }}>{p.id} (W{String(p.startWeek).padStart(2, '0')}–W{String(p.endWeek).padStart(2, '0')})</span>
@@ -148,7 +148,7 @@ export default function MilestoneGrid({ filters, zoom }) {
             </div>
           </div>
           <div className="pl-row pl-head-row" style={{ top: 22, minHeight: 22 }}>
-            <div className="pl-left"><div style={{ width: 420 }} className="muted small">Months</div></div>
+            <div className="pl-left"><div style={{ width: 490 }} className="muted small">Months</div></div>
             <div className="pl-time pl-hline">
               {plan.meta.months.map((m) => (
                 <span key={m.month} className="pl-cell-h" style={{ width: (m.endWeek - m.startWeek + 1) * cw }}>{MONTH_NAMES[m.month - 1]}-{String(plan.meta.source?.year).slice(2)}</span>
@@ -157,7 +157,7 @@ export default function MilestoneGrid({ filters, zoom }) {
           </div>
           <div className="pl-row pl-head-row" style={{ top: 44, minHeight: 24 }}>
             <div className="pl-left">
-              <div className="c-bu"><b>BU</b></div><div className="c-proj"><b>Project</b></div><div className="c-eop"><b>EOP</b></div><div className="c-plant"><b>Plant</b></div>
+              <div className="c-proj"><b>Project</b></div><div className="c-fam"><b>Family</b></div><div className="c-eop"><b>EOP</b></div><div className="c-plant"><b>Plant</b></div><div className="c-cat"><b>Category</b></div>
             </div>
             <div className="pl-time pl-hline" style={{ height: 24 }}>
               {weekCells.map((w) => (
@@ -175,7 +175,7 @@ export default function MilestoneGrid({ filters, zoom }) {
               <div key={bu.id}>
                 <div className="pl-row pl-bu" onClick={() => setCollapsed((c) => ({ ...c, [bu.id]: !c[bu.id] }))}>
                   <div className="pl-left" style={{ background: '#e8edf5' }}>
-                    <div style={{ width: 420 }}>
+                    <div style={{ width: 490 }}>
                       {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                       <span>{bu.name}</span>
                       <span className="badge">{bu.plantGroup || 'no plant group'}</span>
@@ -200,7 +200,6 @@ export default function MilestoneGrid({ filters, zoom }) {
                   return (
                     <div className="pl-row" key={line.id} style={{ minHeight: lanes * 25 + 6 }}>
                       <div className="pl-left">
-                        <div className="c-bu"><span className="muted small">{line.sourceRow ? `r${line.sourceRow}` : ''}</span></div>
                         <div className="c-proj">
                           <InlineEdit value={line.project} readOnly={readOnly} onCommit={(v) => v.trim() && dispatch(A.lineUpdate(line.id, { project: v }))} />
                           {line.origin !== 'source' && <OriginBadge origin={line.origin} />}
@@ -213,11 +212,22 @@ export default function MilestoneGrid({ filters, zoom }) {
                             </span>
                           )}
                         </div>
+                        <div className="c-fam">
+                          <InlineEdit value={line.family ?? ''} display={line.family || <span className="muted">TBC</span>} readOnly={readOnly} onCommit={(v) => dispatch(A.lineUpdate(line.id, { family: v.trim() || null }))} />
+                        </div>
                         <div className="c-eop" style={{ color: eopBad ? 'var(--warn)' : undefined }}>
                           <InlineEdit value={formatEop(line.eop)} readOnly={readOnly} onCommit={(v) => commitEop(line, v)} title={line.eop?.status === 'Needs confirmation' ? 'Needs confirmation (source cell mis-formatted)' : 'Click to edit: MM/YYYY, YYYY or TBC'} />
                           {line.eop?.status === 'Needs confirmation' && <span title="Needs confirmation">?</span>}
                         </div>
                         <div className="c-plant"><span className="small" style={{ color: line.plant ? undefined : 'var(--muted)' }}>{line.plant || 'TBC'}</span></div>
+                        <div className="c-cat">
+                          {readOnly ? <span className="small">{line.category || 'TBC'}</span> : (
+                            <select className="small" style={{ width: '100%', border: 0, background: 'transparent', color: line.category ? undefined : 'var(--muted)' }} value={line.category ?? ''} onClick={(e) => e.stopPropagation()} onChange={(e) => dispatch(A.lineUpdate(line.id, { category: e.target.value || null }))}>
+                              <option value="">TBC</option>
+                              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                            </select>
+                          )}
+                        </div>
                       </div>
                       <div className="pl-time pl-grid" onClick={(e) => timeClick(e, line)}>
                         <div className="pl-curcol" style={{ left: (ref - 1) * cw, width: cw }} />
@@ -246,7 +256,7 @@ export default function MilestoneGrid({ filters, zoom }) {
 
                 {!isCollapsed && !readOnly && (
                   <div className="pl-row">
-                    <div className="pl-left"><div style={{ width: 420 }}><button className="btn sm ghost" onClick={() => setForm({ kind: 'line', bu: bu.name })}><Plus size={13} /> Add project line</button></div></div>
+                    <div className="pl-left"><div style={{ width: 490 }}><button className="btn sm ghost" onClick={() => setForm({ kind: 'line', bu: bu.name })}><Plus size={13} /> Add project line</button></div></div>
                     <div className="pl-time" />
                   </div>
                 )}

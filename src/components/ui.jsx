@@ -44,7 +44,7 @@ export function Confirm({ title, message, confirmLabel = 'Confirm', danger, onCo
 
 export function OriginBadge({ origin }) {
   if (!origin) return null;
-  return <span className={`badge origin-${origin}`} title={`Origin: ${origin}`}>{origin === 'demo' ? 'DEMO' : origin}</span>;
+  return <span className={`badge origin-${origin}`} title={`Origin: ${origin}`}>{origin === 'demo' ? 'DEMO' : origin === 'matrix' ? 'MATRIX' : origin}</span>;
 }
 
 export function TaskStatusBadge({ status }) {

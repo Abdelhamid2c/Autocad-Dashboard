@@ -1,10 +1,10 @@
 import { parseCSV, toCSV } from './csv.js';
 import { formatEop, parseEop } from './eop.js';
 import { uid } from './ids.js';
-import { MILESTONE_TYPES } from './milestoneStyle.js';
+import { CATEGORIES, MILESTONE_TYPES } from './milestoneStyle.js';
 import { milestoneDates, validateWeeks } from './planValidation.js';
 
-export const CSV_HEADERS = ['BU', 'Project', 'EOP', 'Plant', 'Milestone', 'Type', 'Start Week', 'End Week', 'Start Date', 'End Date', 'Line ID', 'Milestone ID'];
+export const CSV_HEADERS = ['BU', 'Project', 'Family', 'EOP', 'Plant', 'Category', 'Milestone', 'Type', 'Start Week', 'End Week', 'Start Date', 'End Date', 'Line ID', 'Milestone ID'];
 
 export function exportPlanJSON(plan) {
   return JSON.stringify({ meta: plan.meta, businessUnits: plan.businessUnits, projectLines: plan.projectLines }, null, 2);
@@ -13,7 +13,7 @@ export function exportPlanJSON(plan) {
 export function exportPlanCSV(plan) {
   const rows = [];
   for (const l of plan.projectLines) {
-    const base = { BU: l.bu, Project: l.project, EOP: formatEop(l.eop), Plant: l.plant ?? 'TBC', 'Line ID': l.id };
+    const base = { BU: l.bu, Project: l.project, Family: l.family ?? 'TBC', EOP: formatEop(l.eop), Plant: l.plant ?? 'TBC', Category: l.category ?? 'TBC', 'Line ID': l.id };
     if (!l.milestones.length) rows.push(base);
     for (const m of l.milestones) {
       rows.push({
@@ -115,7 +115,7 @@ export function parsePlanImport(text, filename, current, tasks) {
       if (!lines.has(key)) {
         const eop = parseEop(r.EOP, 'User') ?? (warnings.push(`${ctx}: EOP "${r.EOP}" not understood, set to TBC.`), parseEop('TBC'));
         const bu = buByName.get(r.BU);
-        lines.set(key, { id: r['Line ID'] || uid('LINE'), sourceRow: null, bu: r.BU, project: r.Project, plantGroup: bu?.plantGroup ?? '', plant: normPlant(r.Plant), eop, milestones: [], origin: 'user' });
+        lines.set(key, { id: r['Line ID'] || uid('LINE'), sourceRow: null, bu: r.BU, project: r.Project, plantGroup: bu?.plantGroup ?? '', plant: normPlant(r.Plant), family: normPlant(r.Family) ? r.Family.trim() : null, category: CATEGORIES.find((c) => c.toUpperCase() === String(r.Category ?? '').trim().toUpperCase()) ?? null, eop, milestones: [], origin: 'user' });
       }
       if (r['Start Week'] || r.Milestone) {
         const id = r['Milestone ID'] && !usedMs.has(r['Milestone ID']) ? r['Milestone ID'] : uid('M');

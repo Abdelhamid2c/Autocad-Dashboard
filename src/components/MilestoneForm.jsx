@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { A } from '../state/actions.js';
 import { useStore } from '../state/store.jsx';
-import { MILESTONE_TYPES, milestoneColors, typeMeta } from '../utils/milestoneStyle.js';
+import { MILESTONE_TYPES, WORK_CLASSES, milestoneColors, typeMeta } from '../utils/milestoneStyle.js';
 import { milestoneWarnings, validateWeeks } from '../utils/planValidation.js';
 import { weekRangeText } from '../utils/weekCalendar.js';
+import { classNeedsSize, matrixTasksFor } from '../utils/taskMatrix.js';
 import DeleteImpactDialog from './DeleteImpactDialog.jsx';
 import { Banner, Field, Modal } from './ui.jsx';
 
@@ -12,6 +13,7 @@ export default function MilestoneForm({ line, milestone, defaults, onClose, onDe
   const types = data.milestones.meta.milestoneTypes;
   const [label, setLabel] = useState(milestone?.label ?? '');
   const [type, setType] = useState(milestone?.type ?? 'OTHER');
+  const [workClass, setWorkClass] = useState(milestone?.workClass ?? '');
   const [start, setStart] = useState(String(milestone?.startWeek ?? defaults?.startWeek ?? ''));
   const [end, setEnd] = useState(String(milestone?.endWeek ?? defaults?.endWeek ?? ''));
   const [override, setOverride] = useState(!!milestone?.colorOverride);
@@ -25,11 +27,13 @@ export default function MilestoneForm({ line, milestone, defaults, onClose, onDe
   if (!label.trim()) errors.unshift('Label is required.');
   const warnings = errors.length ? [] : milestoneWarnings(line, { id: milestone?.id, type, startWeek: s, endWeek: e }, model.year);
   const taskCount = milestone ? (model.tasksByMs[milestone.id]?.length ?? 0) : 0;
+  const matrixTasks = matrixTasksFor(workClass, line.category);
+  const matrixHours = matrixTasks?.reduce((s, t) => s + t.hours, 0) ?? 0;
   const preview = milestoneColors({ type, sourceColor: override ? null : milestone?.sourceColor, colorOverride: override ? color : null }, types);
 
   const save = () => {
     if (errors.length) return;
-    const body = { label, type, startWeek: s, endWeek: e, colorOverride: override ? color : null, notes };
+    const body = { label, type, workClass: workClass || null, startWeek: s, endWeek: e, colorOverride: override ? color : null, notes };
     if (milestone) dispatch(A.msUpdate(milestone.id, body));
     else dispatch(A.msAdd(line.id, body));
     notify(warnings.length ? `Saved with ${warnings.length} warning(s)` : 'Milestone saved', warnings.length ? 'warn' : 'ok');
@@ -54,7 +58,12 @@ export default function MilestoneForm({ line, milestone, defaults, onClose, onDe
           <Field label="Type" hint={typeMeta(types, type).label}>
             <select value={type} onChange={(ev) => setType(ev.target.value)}>{MILESTONE_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
           </Field>
-          <div />
+          <Field label="Work class" hint="Leave TBC if not yet defined">
+            <select value={workClass} onChange={(ev) => setWorkClass(ev.target.value)}>
+              <option value="">TBC</option>
+              {WORK_CLASSES.map((w) => <option key={w}>{w}</option>)}
+            </select>
+          </Field>
           <Field label="Start week (1–52)" hint={weekRangeText(s)}><input type="number" min="1" max="52" value={start} onChange={(ev) => setStart(ev.target.value)} /></Field>
           <Field label="End week (1–52)" hint={weekRangeText(e)}><input type="number" min="1" max="52" value={end} onChange={(ev) => setEnd(ev.target.value)} /></Field>
           <div className="full row">
@@ -66,6 +75,8 @@ export default function MilestoneForm({ line, milestone, defaults, onClose, onDe
         </div>
         {errors.map((x) => <Banner key={x} type="err">{x}</Banner>)}
         {warnings.map((x) => <Banner key={x} type="warn">{x}</Banner>)}
+        {workClass && matrixTasks === null && <Banner type="warn">{workClass} needs a line Category (SMALLS, UMS or Mega). Set it on the project line, then save again to generate the tasks.</Banner>}
+        {matrixTasks?.length > 0 && <Banner type="info">Saving generates/updates {matrixTasks.length} matrix task(s) totalling {matrixHours} h{classNeedsSize(workClass) ? ` (${line.category})` : ''}. Manual changes to those tasks' name or hours are replaced; other tasks are untouched.</Banner>}
         {milestone && taskCount > 0 && <Banner type="info">{taskCount} task(s) use this milestone. Changing the weeks moves tasks that follow the milestone window and flags other dated tasks for review.</Banner>}
       </Modal>
       {confirmDelete && (

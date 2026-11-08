@@ -107,6 +107,7 @@ textarea { resize: vertical; min-height: 56px; }
 .badge.origin-source { background: #e1edf8; color: #1f5f97; }
 .badge.origin-user { background: #e3f5ea; color: #1f7a45; }
 .badge.origin-demo { background: #f4b183; color: #4a2300; }
+.badge.origin-matrix { background: #ece4f7; color: #5b2f91; }
 .badge.warn { background: #fdf0d5; color: #8a5a00; }
 .badge.bad { background: #fde3e6; color: #a1001a; }
 .utilbar { background: #e6eaf0; border-radius: 4px; overflow: hidden; min-width: 60px; }
@@ -148,7 +149,7 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 .pl-row { display: flex; border-bottom: 1px solid #edf0f4; min-height: 30px; }
 .pl-left { display: flex; position: sticky; left: 0; z-index: 4; background: #fff; flex-shrink: 0; border-right: 2px solid #c9d0db; }
 .pl-left > div { padding: 3px 6px; border-right: 1px solid #edf0f4; display: flex; align-items: center; gap: 4px; overflow: hidden; }
-.c-bu { width: 74px; } .c-proj { width: 210px; } .c-eop { width: 70px; } .c-plant { width: 66px; }
+.c-proj { width: 190px; } .c-fam { width: 90px; } .c-eop { width: 70px; } .c-plant { width: 66px; } .c-cat { width: 74px; }
 .pl-time { position: relative; flex-shrink: 0; width: calc(var(--cw) * 52); }
 .pl-grid { background-image: repeating-linear-gradient(to right, transparent 0, transparent calc(var(--cw) - 1px), #eef1f5 calc(var(--cw) - 1px), var(--cw)); }
 .pl-head-row { position: sticky; z-index: 6; background: #f6f8fb; }

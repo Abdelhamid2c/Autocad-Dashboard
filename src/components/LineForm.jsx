@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { A } from '../state/actions.js';
 import { useStore } from '../state/store.jsx';
 import { eopInputValue, formatEop, parseEop } from '../utils/eop.js';
-import { PLANTS } from '../utils/milestoneStyle.js';
+import { CATEGORIES, PLANTS } from '../utils/milestoneStyle.js';
 import { Field, Modal } from './ui.jsx';
 
 export default function LineForm({ line, bu, onClose }) {
@@ -14,6 +14,8 @@ export default function LineForm({ line, bu, onClose }) {
   const [month, setMonth] = useState(eopInputValue(e0));
   const [year, setYear] = useState(e0?.year ? String(e0.year) : '');
   const [plant, setPlant] = useState(line?.plant ?? '');
+  const [family, setFamily] = useState(line?.family ?? '');
+  const [category, setCategory] = useState(line?.category ?? '');
   const [notes, setNotes] = useState(line?.notes ?? '');
 
   const buildEop = () => {
@@ -31,8 +33,8 @@ export default function LineForm({ line, bu, onClose }) {
     // Keep the original EOP object (raw text, "Needs confirmation" status) when the coordinator did not change it.
     const unchanged = line && formatEop(line.eop) === formatEop(eop) && line.eop.year === eop.year;
     const finalEop = unchanged ? line.eop : eop;
-    if (line) dispatch(A.lineUpdate(line.id, { project, bu: buName, eop: finalEop, plant: plant || null, notes }));
-    else dispatch(A.lineAdd({ bu: buName, project, eop: finalEop, plant: plant || null, notes }));
+    if (line) dispatch(A.lineUpdate(line.id, { project, bu: buName, eop: finalEop, plant: plant || null, family: family.trim() || null, category: category || null, notes }));
+    else dispatch(A.lineAdd({ bu: buName, project, family, category, eop: finalEop, plant: plant || null, notes }));
     notify(line ? 'Project line updated' : 'Project line added', 'ok');
     onClose();
   };
@@ -45,6 +47,13 @@ export default function LineForm({ line, bu, onClose }) {
     >
       <div className="form-grid">
         <Field label="Project name" className="full"><input autoFocus value={project} onChange={(e) => setProject(e.target.value)} /></Field>
+        <Field label="Family" hint="Leave empty if unknown (shown as TBC)"><input value={family} onChange={(e) => setFamily(e.target.value)} /></Field>
+        <Field label="Category">
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">TBC</option>
+            {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </Field>
         <Field label="BU">
           <select value={buName} onChange={(e) => setBuName(e.target.value)}>
             {data.milestones.businessUnits.map((b) => <option key={b.id}>{b.name}</option>)}

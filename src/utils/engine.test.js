@@ -9,6 +9,8 @@ import { dashboardStats, computeModel, techWeek } from './workloadAggregation.js
 import { validateWeeks, milestoneWarnings } from './planValidation.js';
 import { parseEop } from './eop.js';
 import { weekStart, weekEnd, weekOfDate, weekRangeText } from './weekCalendar.js';
+import { classNeedsSize, matrixTasksFor } from './taskMatrix.js';
+import { CATEGORIES, WORK_CLASSES } from './milestoneStyle.js';
 
 const base = () => ({ milestones: structuredClone(milestones), organization: structuredClone(organization), tasks: [], assignments: {}, settings: structuredClone(DEFAULT_SETTINGS), editLog: [] });
 
@@ -80,6 +82,57 @@ describe('plan rules', () => {
     apply({ type: 'MS_DELETE', id: 'M1', taskMode: 'orphan' });
     expect(data.tasks[0].orphan).toBe(true);
     expect(data.tasks[0].milestoneId).toBe(null);
+  });
+});
+
+describe('task matrix', () => {
+  const setup = (category) => {
+    let data = base();
+    const apply = (a) => { const r = applyOp(data, a); data = { ...data, ...r.changes }; };
+    apply({ type: 'BU_ADD', bu: { name: 'Test BU', plantGroup: 'YMOK' } });
+    apply({ type: 'LINE_ADD', line: { id: 'L1', bu: 'Test BU', project: 'P', eop: parseEop('06/2028'), plant: 'YMOK', category } });
+    return { apply, get: () => data };
+  };
+  const hours = (d) => d.tasks.reduce((s, t) => s + t.estimatedMinutes / 60, 0);
+
+  it('matrix column totals match the reference sheet (353 h overall)', () => {
+    let sum = 0;
+    for (const wc of WORK_CLASSES) {
+      for (const size of classNeedsSize(wc) ? CATEGORIES : [null]) {
+        sum += matrixTasksFor(wc, size).reduce((s, t) => s + t.hours, 0);
+      }
+    }
+    expect(sum).toBe(353);
+    expect(matrixTasksFor('First OT', 'Mega').reduce((s, t) => s + t.hours, 0)).toBe(108);
+    expect(matrixTasksFor('MY Complex & OTOP & Ergono', 'UMS').reduce((s, t) => s + t.hours, 0)).toBe(36);
+    expect(matrixTasksFor('ECOs complex').reduce((s, t) => s + t.hours, 0)).toBe(5);
+  });
+  it('generates, updates without duplicates, and switches class', () => {
+    const { apply, get } = setup('UMS');
+    apply({ type: 'MS_ADD', lineId: 'L1', ms: { id: 'M1', label: 'SOP', type: 'SOP', startWeek: 20, endWeek: 22, workClass: 'First OT' } });
+    expect(get().tasks.length).toBe(4);
+    expect(hours(get())).toBe(64);
+    apply({ type: 'MS_UPDATE', id: 'M1', patch: { label: 'SOP', workClass: 'First OT' } });
+    expect(get().tasks.length).toBe(4);
+    apply({ type: 'MS_UPDATE', id: 'M1', patch: { workClass: 'MY Simple' } });
+    expect(get().tasks.map((t) => t.matrixKey).sort()).toEqual(['T10', 'T9']);
+    expect(hours(get())).toBe(6);
+    apply({ type: 'LINE_UPDATE', id: 'L1', patch: { category: 'Mega' } });
+    expect(hours(get())).toBe(9);
+    apply({ type: 'MS_UPDATE', id: 'M1', patch: { workClass: 'ECOs Simple' } });
+    expect(hours(get())).toBe(4);
+  });
+  it('keeps started tasks as manual and does nothing when the sub-category is missing', () => {
+    const { apply, get } = setup(null);
+    apply({ type: 'MS_ADD', lineId: 'L1', ms: { id: 'M1', label: 'SOP', type: 'SOP', startWeek: 20, endWeek: 22, workClass: 'First OT' } });
+    expect(get().tasks.length).toBe(0);
+    apply({ type: 'MS_UPDATE', id: 'M1', patch: { workClass: 'ECOs complex' } });
+    expect(hours(get())).toBe(5);
+    const id = get().tasks[0].id;
+    apply({ type: 'TASK_PATCH', id, patch: { status: 'IN_PROGRESS' } });
+    apply({ type: 'MS_UPDATE', id: 'M1', patch: { workClass: null } });
+    expect(get().tasks.length).toBe(1);
+    expect(get().tasks[0].origin).toBe('user');
   });
 });
 

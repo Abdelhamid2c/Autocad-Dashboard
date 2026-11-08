@@ -2,6 +2,7 @@ import { isTechnician } from '../utils/capacityCalculations.js';
 import { uid } from '../utils/ids.js';
 import { milestoneDates } from '../utils/planValidation.js';
 import { generateDemoTasks } from '../utils/demoData.js';
+import { matrixTasksFor } from '../utils/taskMatrix.js';
 import { weekEnd, weekSpanText, weekStart } from '../utils/weekCalendar.js';
 import { seedValue } from '../storage/seed.js';
 
@@ -34,6 +35,64 @@ function removeTasksOrOrphan(data, msInfo, mode) {
 }
 const infoOf = (line, m) => ({ label: m.label, type: m.type, project: line.project, bu: line.bu });
 const countTasks = (data, ids) => data.tasks.filter((t) => ids.has(t.milestoneId)).length;
+
+// ---------- Task matrix sync ----------
+// Generated tasks are keyed by (milestoneId, matrixKey), so re-running a sync never duplicates them.
+function syncMatrix(data, lineId, msId) {
+  const line = data.milestones.projectLines.find((l) => l.id === lineId);
+  const ms = line?.milestones.find((m) => m.id === msId);
+  if (!ms) return null;
+  const wanted = matrixTasksFor(ms.workClass, line.category);
+  if (wanted === null) return null; // sub-category missing: leave existing tasks untouched
+  const stats = { added: 0, updated: 0, removed: 0 };
+  let assignments = data.assignments;
+  const seen = new Set();
+  const tasks = [];
+  for (const t of data.tasks) {
+    if (t.milestoneId !== msId || !t.matrixKey) {
+      tasks.push(t);
+      continue;
+    }
+    const w = wanted.find((x) => x.key === t.matrixKey);
+    if (w && !seen.has(w.key)) {
+      seen.add(w.key);
+      if (t.name !== w.name || t.description !== w.description || t.estimatedMinutes !== w.minutes) stats.updated += 1;
+      tasks.push({ ...t, name: w.name, description: w.description, estimatedMinutes: w.minutes, matrixClass: ms.workClass, matrixSize: w.size });
+    } else if (t.status === 'NOT_STARTED') {
+      stats.removed += 1;
+      if (assignments[t.id]) {
+        assignments = { ...assignments };
+        delete assignments[t.id];
+      }
+    } else {
+      // Started or completed work is kept as a manual task rather than deleted.
+      tasks.push({ ...t, matrixKey: undefined, matrixClass: undefined, matrixSize: undefined, origin: 'user' });
+    }
+  }
+  for (const w of wanted) {
+    if (seen.has(w.key)) continue;
+    stats.added += 1;
+    tasks.push({
+      id: uid('T'), milestoneId: msId, lineId, name: w.name, description: w.description, estimatedMinutes: w.minutes, actualMinutes: 0,
+      status: 'NOT_STARTED', priority: 'Medium', startDate: ms.startDate, endDate: ms.endDate, followsMilestone: true, skills: [],
+      plant: line.plant ?? null, technicianId: null, notes: '', needsReview: false, orphan: false,
+      origin: 'matrix', matrixKey: w.key, matrixClass: ms.workClass, matrixSize: w.size,
+    });
+  }
+  return { tasks, assignments, stats };
+}
+function syncMatrixMany(data, lineId, msIds) {
+  let cur = data;
+  const stats = { added: 0, updated: 0, removed: 0 };
+  for (const id of msIds) {
+    const r = syncMatrix(cur, lineId, id);
+    if (!r) continue;
+    cur = { ...cur, tasks: r.tasks, assignments: r.assignments };
+    for (const k of Object.keys(stats)) stats[k] += r.stats[k];
+  }
+  return { tasks: cur.tasks, assignments: cur.assignments, stats, changed: stats.added + stats.updated + stats.removed > 0 };
+}
+const matrixSuffix = (s) => ` · matrix tasks +${s.added} ~${s.updated} −${s.removed}`;
 
 // ---------- Business units ----------
 function buAdd(data, { bu }) {
@@ -75,7 +134,7 @@ function lineAdd(data, { line }) {
   const bu = plan.businessUnits.find((b) => b.name === line.bu);
   const row = {
     id: line.id || uid('LINE'), sourceRow: null, bu: line.bu, project: line.project.trim(), plantGroup: bu?.plantGroup ?? '', plant: line.plant || null,
-    eop: line.eop, milestones: [], origin: 'user', notes: line.notes || '',
+    family: line.family?.trim() || null, category: line.category || null, eop: line.eop, milestones: [], origin: 'user', notes: line.notes || '',
   };
   return { changes: { milestones: { ...plan, projectLines: [...plan.projectLines, row] } }, desc: `Add project line "${row.project}" in ${row.bu}`, newId: row.id };
 }
@@ -86,7 +145,17 @@ function lineUpdate(data, { id, patch }) {
   const next = { ...old, ...patch };
   if (patch.project !== undefined) next.project = patch.project.trim();
   if (patch.bu && patch.bu !== old.bu) next.plantGroup = plan.businessUnits.find((b) => b.name === patch.bu)?.plantGroup ?? next.plantGroup;
-  return { changes: { milestones: { ...plan, projectLines: plan.projectLines.map((l) => (l.id === id ? next : l)) } }, desc: `Edit project line "${next.project}"` };
+  const changes = { milestones: { ...plan, projectLines: plan.projectLines.map((l) => (l.id === id ? next : l)) } };
+  let desc = `Edit project line "${next.project}"`;
+  if (patch.category !== undefined && (patch.category || null) !== (old.category || null)) {
+    const r = syncMatrixMany({ ...data, ...changes }, id, next.milestones.filter((m) => m.workClass).map((m) => m.id));
+    if (r.changed) {
+      changes.tasks = r.tasks;
+      changes.assignments = r.assignments;
+      desc += matrixSuffix(r.stats);
+    }
+  }
+  return { changes, desc };
 }
 function lineDuplicate(data, { id }) {
   const plan = data.milestones;
@@ -99,7 +168,13 @@ function lineDuplicate(data, { id }) {
   };
   const lines = [...plan.projectLines];
   lines.splice(i + 1, 0, copy);
-  return { changes: { milestones: { ...plan, projectLines: lines } }, desc: `Duplicate project line "${src.project}"` };
+  const changes = { milestones: { ...plan, projectLines: lines } };
+  const r = syncMatrixMany({ ...data, ...changes }, copy.id, copy.milestones.filter((m) => m.workClass).map((m) => m.id));
+  if (r.changed) {
+    changes.tasks = r.tasks;
+    changes.assignments = r.assignments;
+  }
+  return { changes, desc: `Duplicate project line "${src.project}"` };
 }
 function lineDelete(data, { id, taskMode }) {
   const plan = data.milestones;
@@ -116,12 +191,17 @@ function msAdd(data, { lineId, ms }) {
   if (!line) return null;
   const row = {
     id: ms.id || uid('M'), label: ms.label.trim(), type: ms.type, startWeek: ms.startWeek, endWeek: ms.endWeek, ...milestoneDates(ms.startWeek, ms.endWeek),
-    sourceColor: null, colorOverride: ms.colorOverride || null, notes: ms.notes || '', origin: 'user',
+    sourceColor: null, colorOverride: ms.colorOverride || null, workClass: ms.workClass || null, notes: ms.notes || '', origin: 'user',
   };
-  return {
-    changes: { milestones: { ...plan, projectLines: plan.projectLines.map((l) => (l.id === lineId ? { ...l, milestones: [...l.milestones, row] } : l)) } },
-    desc: `Add milestone "${row.label}" (${weekSpanText(row.startWeek, row.endWeek)}) on "${line.project}"`, newId: row.id,
-  };
+  const changes = { milestones: { ...plan, projectLines: plan.projectLines.map((l) => (l.id === lineId ? { ...l, milestones: [...l.milestones, row] } : l)) } };
+  let desc = `Add milestone "${row.label}" (${weekSpanText(row.startWeek, row.endWeek)}) on "${line.project}"`;
+  const r = syncMatrixMany({ ...data, ...changes }, lineId, [row.id]);
+  if (r.changed) {
+    changes.tasks = r.tasks;
+    changes.assignments = r.assignments;
+    desc += matrixSuffix(r.stats);
+  }
+  return { changes, desc, newId: row.id };
 }
 function msUpdate(data, { id, patch }) {
   const plan = data.milestones;
@@ -148,7 +228,17 @@ function msUpdate(data, { id, patch }) {
       return t;
     });
   }
-  return { changes, desc: weeksChanged ? `Move/resize milestone "${next.label}" → ${weekSpanText(next.startWeek, next.endWeek)}` : `Edit milestone "${next.label}"` };
+  let desc = weeksChanged ? `Move/resize milestone "${next.label}" → ${weekSpanText(next.startWeek, next.endWeek)}` : `Edit milestone "${next.label}"`;
+  // Only form saves send workClass; drag/resize keeps manual task edits intact.
+  if (patch.workClass !== undefined) {
+    const r = syncMatrixMany({ ...data, ...changes }, line.id, [id]);
+    if (r.changed) {
+      changes.tasks = r.tasks;
+      changes.assignments = r.assignments;
+      desc += matrixSuffix(r.stats);
+    }
+  }
+  return { changes, desc };
 }
 function msDelete(data, { id, taskMode }) {
   const plan = data.milestones;
@@ -212,7 +302,7 @@ function taskDelete(data, { id }) {
 function taskDuplicate(data, { id }) {
   const old = data.tasks.find((t) => t.id === id);
   if (!old) return null;
-  const copy = { ...old, id: uid('T'), name: `${old.name} (copy)`, technicianId: null, status: 'NOT_STARTED', actualMinutes: 0, origin: 'user', needsReview: false };
+  const copy = { ...old, id: uid('T'), name: `${old.name} (copy)`, technicianId: null, status: 'NOT_STARTED', actualMinutes: 0, origin: 'user', needsReview: false, matrixKey: undefined, matrixClass: undefined, matrixSize: undefined };
   return { changes: { tasks: [...data.tasks, copy] }, desc: `Duplicate task "${old.name}"` };
 }
 function taskAssign(data, { id, technicianId, crossPlant }) {

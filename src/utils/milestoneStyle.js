@@ -1,5 +1,7 @@
 export const MILESTONE_TYPES = ['EOP', 'SOP', 'VS', 'DOC', 'PRE_SERIAL', 'TR', 'CF', 'OTHER'];
 export const PLANTS = ['YMM1', 'YMM2', 'YMOK', 'YMK', 'YMOT', 'SATELLITES'];
+export const CATEGORIES = ['SMALLS', 'UMS', 'Mega'];
+export const WORK_CLASSES = ['ECOs Simple', 'ECOs complex', 'MY Simple', 'MY Complex & OTOP & Ergono', 'First OT'];
 
 const FALLBACK = { color: '#F4B183', textColor: '#000000' };
 

@@ -4,6 +4,7 @@ import { A } from '../state/actions.js';
 import { useStore } from '../state/store.jsx';
 import { isTechnician } from '../utils/capacityCalculations.js';
 import { PLANTS } from '../utils/milestoneStyle.js';
+import { techProjects } from '../utils/workloadAggregation.js';
 import { Banner, Confirm, EditOnly, Field, Modal, OriginBadge } from './ui.jsx';
 
 const ROLE = { MANAGER: 'Manager', CAD_RESPONSIBLE: 'CAD Responsible', CAD_TECHNICIAN: 'CAD Technician' };
@@ -63,12 +64,13 @@ function PersonForm({ person, onClose }) {
   );
 }
 
-function Node({ p, onClick }) {
+function Node({ p, onClick, projects }) {
   const tbc = String(p.positionStatus).toUpperCase() === 'TBC';
   return (
     <div className={`org-node small${tbc ? ' tbc' : ''}`} onClick={onClick} title="Click to edit">
       <div className="role">{ROLE[p.role]}{tbc ? ' · TBC' : ''}{p.origin === 'user' ? ' · added' : ''}</div>
       <div><UserRound size={11} /> {p.name || p.label || <span className="muted">name to enter</span>}</div>
+      {projects?.length > 0 && <div className="small muted">{projects.map((l) => `${l.bu} · ${l.project}`).join(', ')}</div>}
     </div>
   );
 }
@@ -78,17 +80,17 @@ export default function OrgChart() {
   const [edit, setEdit] = useState(null);
   const people = model.people;
   const confirmedTechs = model.activeTechs.length;
-  const resps = people.filter((p) => p.role === 'CAD_RESPONSIBLE' && String(p.positionStatus).toUpperCase() !== 'TBC').length;
+  // const resps = people.filter((p) => p.role === 'CAD_RESPONSIBLE' && String(p.positionStatus).toUpperCase() !== 'TBC').length;
 
   return (
     <>
       <div className="stat-line" style={{ marginBottom: 10 }}>
-        <span>Confirmed CAD Technicians <b>{confirmedTechs}</b></span>
-        <span>Confirmed CAD Responsibles <b>{resps}</b></span>
-        <span className="muted">The chart has no “CAD Coordinator” box: the coordinator is the app user (reports to the PPC Director); CAD Responsibles are plant leads.</span>
+        {/* <span>Confirmed CAD Technicians <b>{confirmedTechs}</b></span>
+        <span>Confirmed CAD Responsibles <b>{resps}</b></span> */}
+        <span className="muted"></span>
       </div>
       <div className="org-tree">
-        <div className="org-node director"><div className="role">PPC Director</div><b>{model.data.organization.director?.name ?? 'name not in chart'}</b></div>
+        {/* <div className="org-node director"><div className="role">PPC Director</div><b>{model.data.organization.director?.name ?? 'name not in chart'}</b></div> */}
         <div className="org-sites">
           {model.sites.map((site) => (
             <div className="org-site" key={site.id}>
@@ -96,15 +98,15 @@ export default function OrgChart() {
               <div className="org-plants">
                 {site.plantIds.map((pid) => {
                   const plant = model.plants.find((p) => p.id === pid);
-                  const mgr = people.find((p) => p.role === 'MANAGER' && p.plantId === pid);
+                  // const mgr = people.find((p) => p.role === 'MANAGER' && p.plantId === pid);
                   const resp = people.find((p) => p.role === 'CAD_RESPONSIBLE' && p.plantId === pid);
                   const techs = people.filter((p) => isTechnician(p) && p.plantId === pid);
                   return (
                     <div className="org-plant" key={pid}>
                       <h4>{plant.name}</h4>
-                      {mgr && <Node p={mgr} onClick={() => !presentation && setEdit(mgr)} />}
-                      {resp ? <Node p={resp} onClick={() => !presentation && setEdit(resp)} /> : <div className="org-node small tbc"><div className="role">CAD Responsible</div>No box in chart — technicians follow the YMM1 CAD Responsible (to be confirmed)</div>}
-                      {techs.map((t) => <Node key={t.id} p={t} onClick={() => !presentation && setEdit(t)} />)}
+                      {/* {mgr && <Node p={mgr} onClick={() => !presentation && setEdit(mgr)} />}
+                      {resp ? <Node p={resp} onClick={() => !presentation && setEdit(resp)} /> : <div className="org-node small tbc"><div className="role">CAD Responsible</div>No box in chart — technicians follow the YMM1 CAD Responsible (to be confirmed)</div>} */}
+                      {techs.map((t) => <Node key={t.id} p={t} projects={techProjects(model, t.id)} onClick={() => !presentation && setEdit(t)} />)}
                       <EditOnly><button className="btn sm" onClick={() => dispatch(A.personAdd(pid, null))}><Plus size={13} /> Add technician</button></EditOnly>
                     </div>
                   );

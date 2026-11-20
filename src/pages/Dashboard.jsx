@@ -39,7 +39,7 @@ export default function Dashboard() {
     <>
       <PageHead title="Executive Dashboard" subtitle={`CAD department workload across YMM · YMOK · YMK · YMOT · SATELLITES`}>
         <label className="row">Horizon
-          <select value={horizon} onChange={(e) => dispatch(A.ui({ dashboardHorizon: Number(e.target.value) }))}>
+          <select value={horizon} onChange={(e) => dispatch(A.settingsUpdate({ horizonWeeks: Number(e.target.value) }))}>
             <option value={4}>Next 4 weeks</option><option value={12}>Next 12 weeks</option><option value={26}>Next 26 weeks</option><option value={52}>Full year</option>
           </select>
         </label>

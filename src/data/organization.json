@@ -20,7 +20,6 @@
   },
   "namingNote": "The source gives positions and headcounts only — no employee names. 'name' is null and must be entered in the app. Never invent names.",
   "legend": {
-   "PPC_DIRECTOR": "PPC Director",
    "MANAGER": "Manager",
    "CAD_RESPONSIBLE": "CAD Responsible",
    "CAD_TECHNICIAN": "CAD Technician"

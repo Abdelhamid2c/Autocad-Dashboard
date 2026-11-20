@@ -18,9 +18,9 @@ export default function Header({ page, onMenu }) {
         Reference: {weekLabel(model.refWeek)} · {formatDate(model.refDate)}
       </span>
       <span className="muted small">{ui.storagePersistent === false ? <b style={{ color: 'var(--warn)' }}>Not saved to browser</b> : time ? `Saved locally · ${time}` : 'Loaded'}</span>
-      <button className={`btn sm${presentation ? ' primary' : ''}`} onClick={() => dispatch(A.ui({ presentation: !presentation }))} title="Hide editing controls and enlarge KPIs for a projector">
+      {/* <button className={`btn sm${presentation ? ' primary' : ''}`} onClick={() => dispatch(A.ui({ presentation: !presentation }))} title="Hide editing controls and enlarge KPIs for a projector">
         {presentation ? <Pencil size={14} /> : <Monitor size={14} />} {presentation ? 'Exit presentation' : 'Presentation mode'}
-      </button>
+      </button> */}
     </header>
   );
 }

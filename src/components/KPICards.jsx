@@ -1,6 +1,10 @@
 import { href } from '../state/useRoute.js';
 import { round2 } from '../utils/capacityCalculations.js';
-import { dashboardStats, milestonesWithoutTasks, qualityWarningCount, upcomingMilestones } from '../utils/workloadAggregation.js';
+import { dashboardStats, 
+  milestonesWithoutTasks, qualityWarningCount, upcomingMilestones,  milestonesInHorizon  
+ } from '../utils/workloadAggregation.js';
+
+
 
 function Kpi({ label, value, sub, tone, to }) {
   const body = (
@@ -22,11 +26,12 @@ export default function KPICards({ model, horizon }) {
   const noTasks = milestonesWithoutTasks(model).length;
   const dq = qualityWarningCount(model);
   const hasTasks = model.tasks.length > 0;
+  const inHorizon = milestonesInHorizon(model, horizon).length;
+
   return (
     <div className="grid kpis">
       <Kpi label="Active project lines" value={active} sub={`${model.lines.length} lines · ${unknownEop} with unknown EOP`} to="projects" />
-      <Kpi label="Milestones" value={model.milestoneList.length} sub={`in ${model.year} plan`} to="planner" />
-      <Kpi label={`Upcoming (${near} wk)`} value={up.length} sub={`from W${String(model.refWeek).padStart(2, '0')}`} to="planner" tone={up.length ? 'warn' : ''} />
+      <Kpi label="Milestones" value={inHorizon} sub={`W${String(st.w0).padStart(2, '0')}–W${String(st.w1).padStart(2, '0')} · ${model.milestoneList.length} in ${model.year} plan`} to="planner" />
       <Kpi label="Technicians" value={model.activeTechs.length} sub={`confirmed capacity · ${model.techs.length - model.activeTechs.length} TBC excluded`} to="technicians" />
       <Kpi label="Capacity vs allocated" value={`${round2(st.allocated)} / ${round2(st.capacity)} h`} sub={`W${String(st.w0).padStart(2, '0')}–W${String(st.w1).padStart(2, '0')}`} to="plants" />
       <Kpi label="Tasks unassigned" value={hasTasks ? st.unassigned : '—'} sub={hasTasks ? `${st.unscheduled} unscheduled` : 'no task defined yet'} tone={st.unassigned ? 'warn' : ''} to="allocation" />

@@ -63,7 +63,8 @@ a:hover { text-decoration: underline; }
 .grid { display: grid; gap: 12px; }
 .grid.c2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.grid.kpis { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); }
+.grid.kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.grid.kpis > * { min-width: 0; }
 .kpi { background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--navy); border-radius: var(--radius); padding: 8px 12px; }
 .kpi.warn { border-left-color: var(--warn); }
 .kpi.bad { border-left-color: var(--bad); }

@@ -8,6 +8,11 @@ import { addDays, dateRange, getReferenceDate, PLAN_YEAR, weekOfDate, weekStart 
 const EPS = 1e-6;
 const emptyEffort = () => ({ count: 0, minutes: 0, assignedMinutes: 0, unassignedMinutes: 0, completed: 0, completedMinutes: 0 });
 
+
+export function milestonesInHorizon(model, weeks) {
+  const [w0, w1] = horizonRange(model, weeks);
+  return model.milestoneList.filter((m) => m.endWeek >= w0 && m.startWeek <= w1);
+}
 export function lineMatchesPlant(line, plant) {
   if (!plant) return true;
   if (line.plant) return line.plant === plant;

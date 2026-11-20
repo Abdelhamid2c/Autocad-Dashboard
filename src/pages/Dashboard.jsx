@@ -21,8 +21,9 @@ function AlertBox({ title, tone = 'warn', items, to, empty }) {
 }
 
 export default function Dashboard() {
-  const { model, data, dispatch, notify } = useStore();
-  const [horizon, setHorizon] = useState(model.settings.horizonWeeks ?? 12);
+  const { model, data, dispatch, notify, ui } = useStore();
+  const horizon = ui.dashboardHorizon ?? model.settings.horizonWeeks ?? 12;
+  // const [horizon, setHorizon] = useState(model.settings.horizonWeeks ?? 12);
   const st = dashboardStats(model, horizon);
   const near = model.settings.nearMilestoneWeeks;
   const upNoTasks = upcomingMilestones(model, near).filter((m) => !model.tasksByMs[m.id]?.length);
@@ -36,9 +37,9 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHead title="Executive Dashboard" subtitle={`CAD department workload across YMM1 · YMM2 · YMOK · YMK · YMOT · SATELLITES — all figures computed live from the store.`}>
+      <PageHead title="Executive Dashboard" subtitle={`CAD department workload across YMM · YMOK · YMK · YMOT · SATELLITES`}>
         <label className="row">Horizon
-          <select value={horizon} onChange={(e) => setHorizon(Number(e.target.value))}>
+          <select value={horizon} onChange={(e) => dispatch(A.ui({ dashboardHorizon: Number(e.target.value) }))}>
             <option value={4}>Next 4 weeks</option><option value={12}>Next 12 weeks</option><option value={26}>Next 26 weeks</option><option value={52}>Full year</option>
           </select>
         </label>

@@ -22,6 +22,7 @@ export default function LineForm({ line, bu, onClose }) {
     if (mode === 'month') return month ? parseEop(month) : parseEop(null);
     if (mode === 'year') return /^\d{4}$/.test(year) ? parseEop(year) : null;
     return parseEop('TBC');
+
   };
   const eop = buildEop();
   const errors = [];
